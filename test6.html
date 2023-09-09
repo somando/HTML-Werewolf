@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>関数のグラフ表示</title>
+    <script>
+        function drow(myForm) {
+            for (var x = -10; x < 10; x += 0.025) {
+                let y1 = eval(myForm.func.value);
+                x += 0.025;
+                let y2 = eval(myForm.func.value);
+                x -= 0.025;
+                point.moveTo(x * 20 + 200, 200 - y1 * 20);
+                point.lineTo(x * 20 + 200.05, 200 - y2 * 20);
+                point.stroke();
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>関数のグラフ表示</h1>
+    <form>
+        <input type="text" id="formula" name="func">
+        <input type="button" value="描画" onclick="drow(this.form);" style="margin-top: 10px;"><br>
+    </form>
+    <canvas id="field" width="400" height="400" style="background-color: #eeeeee;"></canvas>
+    <script>
+        let formula = document.getElementById('formula');
+        let canvas = document.getElementById('field');
+        let point = canvas.getContext('2d');
+        point.moveTo(0, 200);
+        point.lineTo(400, 200);
+        point.stroke();
+        point.moveTo(200, 0);
+        point.lineTo(200, 400);
+        point.stroke();
+    </script>
+</body>
+</html>

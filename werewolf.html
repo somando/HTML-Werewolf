@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人狼ゲーム</title>
+    <link rel="stylesheet" href="werewolf.css">
+  </head>
+  <body>
+    <div id="backPhoto"></div>
+    <div id="content">
+      <h1>人狼ゲーム</h1>
+      <div id="top">
+        <h2>参加者設定</h2>
+        <div id="member">
+          <a>名前</a><br>
+          <input type="text" name="memberName"><br>
+        </div>
+        <button onclick="addMember()">参加者追加</button><br>
+        <div id="job">
+          <a>役職設定</a><br>
+          <a>人狼　</a><input type="number" id="人狼" name="job" style="width: 4em;" value="1"><br>
+          <a>騎士　</a><input type="number" id="騎士" name="job" style="width: 4em;" value="0"><br>
+          <a>占い師</a><input type="number" id="占い師" name="job" style="width: 4em;" value="0"><br>
+          <a>村人　</a><input type="number" id="村人" name="job" style="width: 4em;" value="0"><br>
+        </div>
+        <button style="margin-top: 40px" onclick="startGame()">ゲーム開始</button>
+      </div>
+      <div id="checkJob" style="display: none;">
+        <h2>役職確認</h2>
+        <p>役職確認を行います。<br>役職確認は参加者登録順に行われます。</p>
+        <p id="name"></p>
+        <button onclick="checkJob()">役職確認へ進む</button>
+      </div>
+      <div id="morning" style="display: none;">
+        <h2>昼</h2>
+        <div id="killedMember"></div>
+        <p>議論を開始して下さい</p>
+        <div id="killMember"></div>
+      </div>
+      <div id="night" style="display: none;">
+        <h2>夜</h2>
+        <p>夜の行動を始めて下さい</p>
+        <div id="nightTurn"></div>
+        <div id="nightOption"></div>
+        <button onclick="nightTurn()" id="actionButton">夜の行動へ進む</button>
+      </div>
+      <div id="resultW" style="display: none;">
+        <p>勝　者</p>
+        <h2>人 狼 陣 営</h2>
+        <button onclick="window.location.reload();">TOPに戻る</button>
+      </div>
+      <div id="resultV" style="display: none;">
+        <p>勝　者</p>
+        <h2>村 人 陣 営</h2>
+        <button onclick="window.location.reload();">TOPに戻る</button>
+      </div>
+    </div>
+    <script>
+      let memberJob, checkNo, wolf = 0, village = 0, liveMember = new Array(), wolfNightTarget, knightNightTarget, i, flag = 0;
+      function addMember() {
+        arr = new Array();
+        const memberData = document.getElementsByName('memberName');
+        for (i = 0; i < memberData.length; i++) {
+          arr.push(memberData[i].value);
+          liveMember.push(memberData[i].value);
+        }
+        member = document.getElementById('member');
+        member.innerHTML += '<input type="text" name="memberName"><br>';
+        for (i = 0; i < memberData.length - 1; i++) {
+          memberData[i].value = arr[i];
+        }
+      }
+      function startGame() {
+        var total = 0;
+        const memberData = document.getElementsByName('memberName');
+        const jobData = document.getElementsByName('job');
+        for (i = 0; i < jobData.length; i++) {
+          total += Number(jobData[i].value)
+        }
+        if (total !== memberData.length) {
+          alert("参加者数と役職の合計人数が一致しません。\n人数を調整してやり直して下さい。");
+        } else {
+          console.log("ゲーム開始！");
+          var jobDetail = new Array();
+          for (i = 0; i < jobData.length; i++) {
+            for (var j = 0; j < jobData[i].value; j++) {
+              if (i === 0) {
+                wolf += 1;
+              } else {
+                village += 1;
+              }
+              jobDetail.push(jobData[i].id);
+            }
+          }
+          if (wolf >= village) {
+            alert("人狼陣営が村人陣営と同数または同数より多いです。\n人数を調整してやり直して下さい。");
+          } else if (wolf === 0) {
+            alert("人狼陣営の人数が0人です。\n人数を調整してやり直して下さい。");
+          } else {
+            document.getElementById('backPhoto').style.backgroundImage = "url(img/checkJob.webp)";
+            console.log(jobDetail);
+            var shuffleJob = new Array();
+            while (jobDetail.length > 0) {
+              n = jobDetail.length;
+              k = Math.floor(Math.random() * n);
+              shuffleJob.push(jobDetail[k]);
+              jobDetail.splice(k, 1);
+            }
+            memberJob = new Array();
+            for (i = 0; i < total; i++) {
+              memberJob.push([memberData[i].value, shuffleJob[i]]);
+            }
+            console.log(memberJob);
+            document.getElementById('top').style.display = "none";
+            document.getElementById('checkJob').style.display = "block";
+            document.getElementById('morning').style.display = "none";
+            checkNo = 0;
+            document.getElementById('name').innerText = memberJob[checkNo][0] + "さんの役職を確認します。";
+          }
+        }
+      }
+      function checkJob() {
+        let checkId = window.confirm("あなたは、" + memberJob[checkNo][0] + "さんですか？\n当てはまる場合はOK、異なる場合はキャンセルを押して下さい。");
+        if (checkId) {
+          alert(memberJob[checkNo][0] + "さんの役職は、「" + memberJob[checkNo][1] + "」です。");
+          switch (memberJob[checkNo][1]) {
+            case '人狼':
+              alert('夜のターンに一人選んで襲撃できます。\n村人陣営と同数になれば勝利です。');
+              break;
+            case '騎士':
+              alert('夜のターンに一人選んで人狼の襲撃から護衛できます。\n人狼陣営を撲滅すれば勝利です。');
+              break;
+            case '占い師':
+              alert('夜のターンに一人選んで陣営を確認できます。\n人狼陣営を撲滅すれば勝利です。');
+              break;
+            case '村人':
+              alert('何も役職を持たない村人です。\n人狼陣営を撲滅すれば勝利です。');
+              break;
+          }
+          checkNo += 1;
+          if (checkNo !== memberJob.length) {
+            alert('次の方に端末を渡して下さい。');
+            document.getElementById('name').innerText = memberJob[checkNo][0] + "さんの役職を確認します。";
+          } else {
+            setMorning();
+          }
+        }
+      }
+      function setMorning() {
+        alert('昼のターンを開始します。');
+        document.getElementById('nightOption').innerHTML = "";
+        document.getElementById('night').style.display = "none";
+        document.getElementById('checkJob').style.display = "none";
+        document.getElementById('morning').style.display = "block";
+        document.getElementById('backPhoto').style.backgroundImage = "url(img/morning.webp)";
+        if (flag === 1) {
+          announceDie();
+        }
+        let killMember = document.getElementById('killMember');
+        killMember.innerHTML = "";
+        for (i = 0; i < memberJob.length; i++) {
+          killMember.innerHTML += '<button name="member" onclick="eveningKill(' + i + ')">' + memberJob[i][0] + 'さんを処刑する</button><br>';
+        }
+        flag = 1;
+      }
+      function eveningKill(mNumber) {
+        checkId = window.confirm(memberJob[mNumber][0] + "さんを処刑してもよろしいですか？");
+        if (checkId) {
+          if (memberJob[mNumber][1] === '人狼') {
+            wolf -= 1;
+          } else {
+            village -= 1;
+          }
+          memberJob.splice(mNumber, 1);
+          checkResult();
+          console.log(memberJob);
+          flag = 1;
+        }
+      }
+      function nightTurn() {
+        checkId = window.confirm("あなたは、" + memberJob[mNumber][0] + "さんですか？\n当てはまる場合はOK、異なる場合はキャンセルを押して下さい。");
+        if (checkId) {
+          document.getElementById('actionButton').style.display = "none";
+          switch (memberJob[mNumber][1]) {
+            case '人狼':
+              document.getElementById('nightTurn').innerText = "今晩、誰を襲撃するか選択して下さい";
+              var option = "";
+              for (i = 0; i < memberJob.length; i++) {
+                if (i !== mNumber) {
+                  option += '<button onclick="wolfNight(' + i + ')">' + memberJob[i][0] + 'さん</button><br>';
+                }
+              }
+              document.getElementById('nightOption').innerHTML = option;
+              break;
+            case '騎士':
+              document.getElementById('nightTurn').innerText = "今晩、誰を護衛するか選択して下さい";
+              var option = "";
+              for (i = 0; i < memberJob.length; i++) {
+                if (i !== mNumber) {
+                  option += '<button onclick="knightNight(' + i + ')">' + memberJob[i][0] + 'さん</button><br>';
+                }
+              }
+              document.getElementById('nightOption').innerHTML = option;
+              break;
+            case '占い師':
+              document.getElementById('nightTurn').innerText = "今晩、誰を占うか選択して下さい";
+              var option = "";
+              for (i = 0; i < memberJob.length; i++) {
+                if (i !== mNumber) {
+                  option += '<button onclick="fortuneNight(' + i + ')">' + memberJob[i][0] + 'さん</button><br>';
+                }
+              }
+              document.getElementById('nightOption').innerHTML = option;
+              break;
+            case '村人':
+              document.getElementById('nightTurn').innerText = "体を休めるを選択して下さい";
+              document.getElementById('nightOption').innerHTML = '<button onclick="villagerNight()">体を休める</button><br>';
+              break;
+          }
+        }
+      }
+      function wolfNight(i) {
+        checkId = window.confirm(memberJob[i][0] + "を襲撃しますか？\n襲撃する場合はOK、キャンセルする場合はキャンセルを押して下さい。");
+        if (checkId) {
+          wolfNightTarget = i;
+          nightMessage();
+          alert('襲撃する相手を選択しました。\n次の参加者に端末を渡して下さい。');
+          checkMorning();
+        }
+      }
+      function knightNight(i) {
+        checkId = window.confirm(memberJob[i][0] + "を護衛しますか？\n護衛する場合はOK、キャンセルする場合はキャンセルを押して下さい。");
+        if (checkId) {
+          knightNightTarget = i;
+          nightMessage();
+          alert("護衛する相手を選択しました。\n次の参加者に端末を渡して下さい。");
+          checkMorning();
+        }
+      }
+      function fortuneNight(i) {
+        checkId = window.confirm(memberJob[i][0] + "を占いますか？\n占いをする場合はOK、キャンセルする場合はキャンセルを押して下さい。");
+        if (checkId) {
+          nightMessage();
+          if (memberJob[i][1] === '人狼') {
+            alert(memberJob[i][0] + 'さんは人狼陣営です。\n次の参加者に端末を渡して下さい。');
+          } else {
+            alert(memberJob[i][0] + 'さんは村人陣営です。\n次の参加者に端末を渡して下さい。');
+          }
+          checkMorning();
+        }
+      }
+      function villagerNight(i) {
+        alert('次の参加者に進みます。');
+        nightMessage();
+        alert("次の参加者に端末を渡して下さい。");
+        checkMorning();
+      }
+      function nightMessage(i) {
+        console.log(mNumber);
+        if (mNumber + 1 < memberJob.length) {
+          document.getElementById('nightTurn').innerText = memberJob[mNumber + 1][0] + "の夜の行動を開始します";
+          document.getElementById('nightOption').innerHTML = "";
+          document.getElementById('actionButton').style.display = "block";
+        }
+      }
+      function checkMorning() {
+        mNumber++;
+        if (mNumber === memberJob.length) {
+          setMorning();
+        }
+      }
+      function announceDie() {
+        if (wolfNightTarget !== knightNightTarget) {
+          document.getElementById('killedMember').innerHTML = '<p>昨晩の犠牲者は、' + memberJob[wolfNightTarget][0] + 'さんでした。</p>';
+          if (memberJob[wolfNightTarget][1] === '人狼') {
+            wolf -= 1;
+          } else {
+            village -= 1;
+          }
+          checkResultM();
+          console.log(memberJob);
+          memberJob.splice(wolfNightTarget, 1);
+        } else {
+          document.getElementById('killedMember').innerHTML = '<p>昨晩の犠牲者はいませんでした。</p>';
+          checkResultM();
+        }
+      }
+      function checkResult() {
+        if (wolf >= village) {
+          alert("人狼陣営の数が村人陣営と同数またはそれ以上となりました。");
+          document.getElementById('morning').style.display = "none";
+          document.getElementById('night').style.display = "none";
+          document.getElementById('resultW').style.display = "block";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/wolf.webp)";
+        } else if (wolf === 0) {
+          alert("人狼陣営の人数が0人となりました。");
+          document.getElementById('morning').style.display = "none";
+          document.getElementById('resultV').style.display = "block";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/villager.webp)";
+        } else {
+          console.log("続行");
+          document.getElementById('morning').style.display = "none";
+          document.getElementById('night').style.display = "block";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/night.webp)";
+          mNumber = 0;
+          document.getElementById('nightTurn').innerText = memberJob[mNumber][0] + "の夜の行動を開始します";
+        }
+      }
+      function checkResultM() {
+        if (wolf >= village) {
+          alert("人狼陣営の数が村人陣営と同数またはそれ以上となりました。");
+          document.getElementById('morning').style.display = "none";
+          document.getElementById('night').style.display = "none";
+          document.getElementById('resultW').style.display = "block";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/wolf.webp)";
+        } else if (wolf === 0) {
+          alert("人狼陣営の人数が0人となりました。");
+          document.getElementById('morning').style.display = "none";
+          document.getElementById('resultV').style.display = "block";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/villager.webp)";
+        } else {
+          console.log("続行");
+          document.getElementById('morning').style.display = "block";
+          document.getElementById('night').style.display = "none";
+          document.getElementById('backPhoto').style.backgroundImage = "url(img/morning.webp)";
+          mNumber = 0;
+          document.getElementById('nightTurn').innerText = memberJob[mNumber][0] + "の夜の行動を開始します";
+        }
+      }
+    </script>
+  </body>
+</html>

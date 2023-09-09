@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>2次方程式の求解</title>
+    <script>
+        function answer() {
+            let a = document.getElementById('a').value;
+            let b = document.getElementById('b').value;
+            let c = document.getElementById('c').value;
+            let d = b * b - 4 * a * c;
+            const answer = document.getElementById('answer');
+            if (d > 0) {
+                let x1 = (-1.0 * b + Math.sqrt(d)) / (2.0 * a);
+                let x2 = (-1.0 * b - Math.sqrt(d)) / (2.0 * a);
+                answer.innerHTML = "<p>x = " + x1 + ", " + x2 + "</p>";
+            } else if (d === 0) {
+                let x1 = (-1.0 * b + Math.sqrt(d)) / (2.0 * a);
+                answer.innerHTML = "<p>x = " + x1 + "</p>";
+            } else {
+                answer.innerHTML = "<p>解なし</p>";
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>2次方程式の求解</h1>
+    <div id="formula">
+        <input type="number" id="a" style="width: 4em;">
+        x<sup>2</sup> +
+        <input type="number" id="b" style="width: 4em;">
+        x +
+        <input type="number" id="c" style="width: 4em;">
+        = 0<br>
+        <input type="button" value="計算" onclick="answer();" style="margin-top: 10px;">
+    </div>
+    <div id="answer"></div>
+</body>
+</html>

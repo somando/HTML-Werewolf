@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>天気予報</title>
+    <script>
+        function get_weather() {
+            const checkPref = document.getElementById('pref').value;
+            console.log(checkPref);
+            for (var i = 1; i < csvArray.length; i++) {
+                if (checkPref == csvArray[i][0]) {
+                    break;
+                }
+            }
+            console.log(i);
+
+            var kishocho = new XMLHttpRequest();
+            var kishochoApi = 'https://www.jma.go.jp/bosai/forecast/data/forecast/' + csvArray[i][2] + '.json';
+            kishocho.open('GET', kishochoApi, true);
+            kishocho.responseType = 'json';
+            kishocho.onload = function() {
+                var kishochoData = this.response;
+                document.getElementById('kishocho').innerHTML = kishochoData;
+            }
+            kishocho.send();
+
+            var yahoo = new XMLHttpRequest();
+            var yahooApi = 'https://map.yahooapis.jp/weather/V1/place?coordinates=' + csvArray[i][4] + ',' + csvArray[i][3] + '&appid=dj00aiZpPVpkcXkwQlVqaHV4bSZzPWNvbnN1bWVyc2VjcmV0Jng9MWY-';
+            yahoo.open('GET', yahooApi, true);
+            yahoo.responseType = 'json';
+            yahoo.onload = function() {
+                var yahooData = this.response;
+                document.getElementById('yahoo').innerHTML = yahooData;
+            }
+            yahoo.send();
+
+            var livedoor = new XMLHttpRequest();
+            var livedoorApi = 'https://weather.tsukumijima.net/api/forecast/city/' + csvArray[i][5];
+            livedoor.open('GET', livedoorApi, true);
+            livedoor.onload = function() {
+                var livedoorData = this.response;
+                document.getElementById('livedoor').innerHTML = livedoorData;
+            }
+            livedoor.send();
+        }
+    </script>
+</head>
+<body>
+    <div id="title">
+        <h1>天気予報比較</h1>
+        <p>気象庁、Yahoo!天気、livedoor天気の3つを比較する天気予報を出力します。</p>
+    </div>
+    <select name="pref" id="pref"  onchange="get_weather()"></select>
+    <div id="kishocho"></div>
+    <div id="yahoo"></div>
+    <div id="livedoor"></div>
+    <script>
+        let csv = new XMLHttpRequest();
+        csv.open("GET", "search_data.csv", false);
+        csv.send(null);
+        let csvArray = new Array();
+        let lines = csv.responseText.split(/\r\n|\n/);
+        for (let i = 0; i < lines.length; ++i) {
+            let cells = lines[i].split(",");
+            if (cells.length != 1) {
+                csvArray.push(cells);
+            }
+        }
+        let prefname = '<option value="none" selected disabled> -- 選択して下さい -- </option>';
+        for (var i = 1; i < csvArray.length; i++) {
+            if (csvArray[i][1] === '--') {
+                prefname += '<option value="' + csvArray[i][0] + '" disabled>-- ' + csvArray[i][0] + ' --</option>';
+            } else {
+                prefname += '<option value="' + csvArray[i][0] + '">' + csvArray[i][0] + '</option>';
+            }
+        }
+        document.getElementById('pref').innerHTML = prefname;
+        console.log(csvArray);
+    </script>
+</body>
+</html>
