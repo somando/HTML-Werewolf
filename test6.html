@@ -5,10 +5,10 @@
     <title>関数のグラフ表示</title>
     <script>
         function drow(myForm) {
-            for (var x = -10; x < 10; x += 0.025) {
-                let y1 = eval(myForm.func.value);
+            for (let x = -10; x < 10; x += 0.025) {
+                var y1 = eval(myForm.func.value);
                 x += 0.025;
-                let y2 = eval(myForm.func.value);
+                var y2 = eval(myForm.func.value);
                 x -= 0.025;
                 point.moveTo(x * 20 + 200, 200 - y1 * 20);
                 point.lineTo(x * 20 + 200.05, 200 - y2 * 20);
